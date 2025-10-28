@@ -9,7 +9,7 @@ plugins {
 
 
 group = 'io.github.leeds-beckett-digital-learning'
-version = '0.1.0'
+version = '0.1.1'
 
 signing {
     sign(publishing.publications)
