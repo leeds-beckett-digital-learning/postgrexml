@@ -1,0 +1,67 @@
+
+
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+
+group = 'io.github.leeds-beckett-digital-learning'
+version = '0.1.0.SNAPSHOT'
+
+publishing {
+    publications {
+        myLibrary(MavenPublication) {
+            from components.java
+            pom {
+                name = rootProject.name
+                description = 'A jar containing an XSL file for building SQL from XML.'
+                url = 'https://github.com/leeds-beckett-digital-learning/postgrexml'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'maber01'
+                        name = 'Jon Maber'
+                        email = 'j.r.maber@leedsbeckett.ac.uk'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/leeds-beckett-digital-learning/postgrexml.git'
+                    developerConnection = 'scm:git:git@github.com:leeds-beckett-digital-learning/postgrexml.git'
+                    url = 'https://github.com/leeds-beckett-digital-learning/postgrexml'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "OSSRH"
+            url "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username = ossrhUserName
+                password = ossrhToken
+            }
+        }
+    }
+}
+
+
+jar {
+    exclude '**/*.class'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}
+
+
