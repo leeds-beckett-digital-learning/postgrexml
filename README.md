@@ -27,6 +27,9 @@ project is set up with a gradle build file so the XSL transform can be packaged 
 to Maven and thus can be easily drawn down into Java projects. You can incorporate this file into your
 Java project using Maven or simply download the `.xsl` file.
 
+The [project page on maven central](https://central.sonatype.com/artifact/io.github.leeds-beckett-digital-learning/postgrexml) lists 
+ways to include this project in your Maven, Gradle etc. project.
+
 ## Example
 Better to see an example first and read a specification later...
 

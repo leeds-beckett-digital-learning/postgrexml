@@ -5,10 +5,12 @@
     Created on : 26 October 2025, 19:01
     Author     : jon
     Description:
-        Purpose of transformation follows.
+        This takes an XML model file and transforms it to a PostreSQL compatible SQL query
+        that, when executed will output an XML representation of the requested data based
+        on the model.
 -->
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:bbls="http://leedsbeckett.ac.uk/bubblesucker" version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:pgxml="http://leedsbeckett.ac.uk/postgrexml" version="1.0">
   <xsl:output method="text" indent="no"/>
 
   <xsl:variable name="nl">
@@ -31,7 +33,7 @@
     <xsl:apply-templates select="." mode="element"/>
   </xsl:template>
 
-  <xsl:template match="*[count( @bbls:from | @bbls:where ) = 2]">
+  <xsl:template match="*[count( @pgxml:from | @pgxml:where ) = 2]">
 
     <xsl:if test="count(ancestor::*) != 0">
       <xsl:text>,</xsl:text>
@@ -50,7 +52,7 @@
 
       <xsl:apply-templates select="." mode="element"/>
 
-    <xsl:value-of select="concat( '))', $nl, 'FROM ', @bbls:from, ' WHERE ', @bbls:where, $nl, ')', $nl )"/>    
+    <xsl:value-of select="concat( '))', $nl, 'FROM ', @pgxml:from, ' WHERE ', @pgxml:where, $nl, ')', $nl )"/>    
   </xsl:template>
 
   <xsl:template match="*" mode="pretext">
@@ -74,9 +76,9 @@
     </xsl:if>    
   </xsl:template>
 
-  <xsl:template match="bbls:field[ count(@bbls:expression) = 1 ]">
+  <xsl:template match="pgxml:field[ count(@pgxml:expression) = 1 ]">
     <xsl:value-of select="', '"/>
-    <xsl:value-of select="@bbls:expression"/>
+    <xsl:value-of select="@pgxml:expression"/>
   </xsl:template>
 
   <xsl:template match="@*">
@@ -94,7 +96,7 @@
     <xsl:variable name="followingnode" select="(./following-sibling::* | ./following-sibling::text())[1]" />
     <!-- Output the text if the following sibling is not an element or -->
     <!-- is a non-repeating element.                                   -->
-    <xsl:if test="name($followingnode) = '' or $followingnode[count( @bbls:from | @bbls:where ) != 2]">
+    <xsl:if test="name($followingnode) = '' or $followingnode[count( @pgxml:from | @pgxml:where ) != 2]">
       <xsl:value-of select="', '"/>
       <xsl:call-template name="string-literal">
         <xsl:with-param name="text" select="string(.)" />
