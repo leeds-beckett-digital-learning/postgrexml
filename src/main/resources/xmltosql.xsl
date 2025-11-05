@@ -10,8 +10,15 @@
         on the model.
 -->
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:pgxml="http://leedsbeckett.ac.uk/postgrexml" version="1.0">
+<xsl:stylesheet 
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+    xmlns:pgxml="http://leedsbeckett.ac.uk/postgrexml" 
+    xmlns:d="http://leedsbeckett.ac.uk/postgrexml/dictionary"
+    xmlns:a="http://leedsbeckett.ac.uk/postgrexml/attributes" 
+    version="1.0">
   <xsl:output method="text" indent="no"/>
+
+  <xsl:param name="dictionaryuri"></xsl:param>
 
   <xsl:variable name="nl">
     <xsl:text>&#x0a;</xsl:text>
@@ -30,10 +37,15 @@
         <xsl:text>,</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
+    
     <xsl:apply-templates select="." mode="element"/>
+    
+    <xsl:if test="count(ancestor::*) = 0">
+      <xsl:value-of select="' AS xml'"/>
+    </xsl:if>
   </xsl:template>
 
-  <xsl:template match="*[count( @pgxml:from | @pgxml:where ) = 2]">
+  <xsl:template match="*[count( @pgxml:from ) = 1]">
 
     <xsl:if test="count(ancestor::*) != 0">
       <xsl:text>,</xsl:text>
@@ -52,7 +64,26 @@
 
       <xsl:apply-templates select="." mode="element"/>
 
-    <xsl:value-of select="concat( '))', $nl, 'FROM ', @pgxml:from, ' WHERE ', @pgxml:where, $nl, ')', $nl )"/>    
+    <xsl:value-of select="concat( '))', $nl, 'FROM ', @pgxml:from, ' ' )"/>
+    <xsl:choose>
+      <xsl:when test="count( @d:where ) = 1">
+        <xsl:variable name="wv" select="@d:where"/>
+        <xsl:variable name="v" select="string( document($dictionaryuri)/dictionary/entry[@name = $wv]/@value )"/>
+        <xsl:choose>
+          <xsl:when test="string-length( $v ) = 0">
+            <xsl:value-of select="concat( $nl, '/* Requested dictionary entry ', $wv, ' not provided in dictionaryuri parameter. */', $nl )"/>
+            <xsl:value-of select="concat( 'WHERE clause not found ' )"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat( 'WHERE ', $v )"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="count( @pgxml:where ) = 1">
+        <xsl:value-of select="concat( 'WHERE ', @pgxml:where )"/>            
+      </xsl:when>
+    </xsl:choose>
+    <xsl:value-of select="concat( $nl, ')', $nl )"/>            
   </xsl:template>
 
   <xsl:template match="*" mode="pretext">
@@ -66,9 +97,9 @@
   </xsl:template>
   
   <xsl:template match="*" mode="attributes">
-    <xsl:if test="count(@*[namespace-uri()='']) != 0">
+    <xsl:if test="count(@*[namespace-uri()='' or namespace-uri()='http://leedsbeckett.ac.uk/postgrexml/attributes']) != 0">
       <xsl:value-of select="', xmlattributes( '"/>
-      <xsl:for-each select="@*[namespace-uri()='']">
+      <xsl:for-each select="@*[namespace-uri()='' or namespace-uri()='http://leedsbeckett.ac.uk/postgrexml/attributes']">
         <xsl:if test="position() != 1">,</xsl:if>
         <xsl:apply-templates select="."/>
       </xsl:for-each>
@@ -83,8 +114,8 @@
 
   <xsl:template match="@*">
     <xsl:choose>
-      <xsl:when test="starts-with(.,'sql;')">
-        <xsl:value-of select="concat( substring(.,5) , ' AS ', name() )"/>
+      <xsl:when test="namespace-uri()='http://leedsbeckett.ac.uk/postgrexml/attributes'">
+        <xsl:value-of select="concat( ., ' AS ', local-name() )"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="concat( $apos, ., $apos, ' AS ', name() )"/>

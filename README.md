@@ -35,7 +35,7 @@ Better to see an example first and read a specification later...
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
-<course_main thing="whatsit" doodah="bonzo" timestamp="sql;current_timestamp(0)" xmlns:pgxml="http://leedsbeckett.ac.uk/postgrexml"> 
+<course_main thing="whatsit" doodah="bonzo" a:timestamp="current_timestamp(0)" xmlns:pgxml="http://leedsbeckett.ac.uk/postgrexml"> 
   <cm_row pgxml:from="public.course_main" pgxml:where="pk1 IN (166666, 188888)" pk1="sql;public.course_main.pk1" data_src_pk1="sql;public.course_main.data_src_pk1">
     <course_name><pgxml:field bbls:expression="public.course_main.course_name"/></course_name>
     <dtcreated><pgxml:field bbls:expression="public.course_main.dtcreated"/></dtcreated>
@@ -130,22 +130,57 @@ the expression will often be the name of a field, e.g. `pk1="sql;public.course_m
 set the value of the attribute `pk1` to the value of the `pk1` field corresponding to each record found.
 
 ## The Specification
-### Namespace
-The namespace is `http://leedsbeckett.ac.uk/postgrexml`. This ensures that the user is free to use any element names and
-attribute names they like without fear of clashing with *special* elements and attributes in the present specification or
-a later version.
+### Namespaces
+Namespaces are used in the special elements and attributes of the model to ensure that the user 
+is free to use any element names and attribute names ey like in the output.
+#### `http://leedsbeckett.ac.uk/postgrexml`
+This is used for key elements and attributes that control the model. Below the prefix `pgxml` is
+used to refer to this namespace.
+#### `http://leedsbeckett.ac.uk/postgrexml/dictionary`
+This is used as an alternate namespace. When used it indicates that instead of interpreting
+the content as literal text for use in the SQL it should be interpreted as a dictionary
+entry key. The dictionary entry value will be used as SQL.  
+A dictionary file URI must be provided as a parameter to the XSL template.
+Below the prefix `d` is used to refer to this namespace.
+#### `http://leedsbeckett.ac.uk/postgrexml/attribute`
+This namespace is applied to any attribute name and indicates that the given
+value is SQL which will be used to find the value to output. It is a separate namespace
+so that it can be used to create output attributes with any local name.
+Below the prefix `a` is used to refer to this namespace.
+
+
 ### Attribute pgxml:from
 This attribute is used on an element to indicate a database table will be used as a source of data for the element and
-its descendents.  It must always be accompanied by the `pgxml:where` attribute.
+its descendents.  If no pgxml:where or d:where attribute is provided then all records in the table
+will be processed.
+
 ### Attribute pgxml:where
 This attribute accompanies the `pgxml:from` attribute and provides the `WHERE` clause for an SQL query that will select
 data for use in this element and its descendents.
+
 ### Element pgxml:field
 This element will result in a text node in the output containing data from the database.
+
 ### Attribute pgxml:expression
 This attribute is added to the pgxml:field element and provides an SQL expression that will be evaluated. The
 result of the expression, in the context where it appears, will be inserted into a text node.
-### Attribute values starting with 'sql;'
-Like the `pgxml:field` element this inserts data from the database based on an expression. However, instead of
-inserting into a text node this inserts into the value of attribute.
 
+### Attribute with a: namespace prefix
+This will cause an attribute to be output with the same local name but without the namespace.
+However, in the attribute instead of providing a literal value an SQL expression is given.
+
+### Attribute d:where
+This attribute can be used instead of pgxml:where. The value must be a dictionary entry name. If
+used then the URI of an XML document must be provided in the XSL parameter named `dictionaryuri`.
+Further, the dictionary document must take this form:
+
+```
+<?xml version="1.0" encoding="UTF-8"?> 
+<dictionary>
+    <entry name="a" value="pk = 123"/>
+    <entry name="b" value="title ~ '^Abc'"/>
+</dictionary>
+```
+The root element must be named `dictionary` and must contain one or more child elements
+named `entry` each of which must have an attribute named `name` and another named `value`.
+Any other elements or attributes will be ignored.
